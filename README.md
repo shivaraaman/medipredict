@@ -10,7 +10,7 @@ pinned: false
 
 # MediPredict — AI-based Multi-Disease Risk Prediction
 
-**Live demo:** https://medipredict-jgw3.onrender.com  (free tier — first load after idle takes up to a minute)
+**Live demo:** https://medi-predict-ml.onrender.com  (free tier — first load after idle takes up to a minute)
 
 Final-year project in Healthcare Informatics. A Flask web application that estimates the risk of
 **diabetes**, **heart disease** and **chronic kidney disease** from routine clinical measurements,

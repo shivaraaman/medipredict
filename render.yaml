@@ -1,7 +1,7 @@
 # Render Blueprint — deploy with: Render dashboard → New → Blueprint → select this repo
 services:
   - type: web
-    name: medipredict
+    name: medi-predict-ml
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
