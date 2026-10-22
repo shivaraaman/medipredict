@@ -10,6 +10,8 @@ pinned: false
 
 # MediPredict — AI-based Multi-Disease Risk Prediction
 
+**Live demo:** https://medipredict-jgw3.onrender.com  (free tier — first load after idle takes up to a minute)
+
 Final-year project in Healthcare Informatics. A Flask web application that estimates the risk of
 **diabetes**, **heart disease** and **chronic kidney disease** from routine clinical measurements,
 using an Artificial Neural Network (Multilayer Perceptron) benchmarked against six machine-learning
@@ -56,7 +58,7 @@ pytest -q                 # check the app still works with the new models
 
 ## Deploy (free)
 
-### Option A — Render (recommended)
+### Option A — Render (recommended, currently live)
 1. Push this folder to a GitHub repository.
 2. On https://render.com sign in with GitHub → **New → Blueprint** → choose the repository.
    `render.yaml` configures everything (build, start command, health check, secret key).
