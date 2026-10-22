@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}History{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1>Assessment history</h1>
+  <p class="muted">The {{ rows|length }} most recent assessments stored in the application database. No names are stored.</p>
+  {% if rows %}
+  <div class="card table-wrap">
+    <table class="table">
+      <thead><tr><th>Date (UTC)</th><th>Assessment</th><th>Patient ref</th><th class="num">Risk</th><th>Band</th><th>Model</th><th><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td>{{ r.created_at.replace('T', ' ')[:16] }}</td>
+          <td><a href="{{ url_for('result', rid=r.id) }}">{{ DISEASES[r.disease].name }}</a></td>
+          <td>{{ r.patient_ref or '—' }}</td>
+          <td class="num">{{ r.probability|pct }}</td>
+          <td><span class="badge badge-{{ r.band }}">{{ r.band|capitalize }}</span></td>
+          <td class="muted small">{{ r.model_name }}</td>
+          <td><form method="post" action="{{ url_for('delete_assessment', rid=r.id) }}" onsubmit="return confirm('Delete this assessment?')"><button class="link danger" type="submit">Delete</button></form></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card empty"><p>No assessments yet.</p><a class="btn btn-primary" href="{{ url_for('index') }}#start">Start one</a></div>
+  {% endif %}
+</section>
+{% endblock %}

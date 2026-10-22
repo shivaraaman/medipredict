@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}About{% endblock %}
+{% block content %}
+<section class="wrap section narrow prose">
+  <h1>About MediPredict</h1>
+  <p class="lede">Diabetes, cardiovascular disease and chronic kidney disease are among the leading causes of death and disability in India and worldwide, and all three are often detected late. MediPredict is a decision-support prototype that turns routine clinical measurements into an early, explainable risk estimate.</p>
+
+  <h2>Approach</h2>
+  <ul>
+    <li><strong>Data cleaning:</strong> physiologically impossible zeros treated as missing; median / most-frequent imputation; standardisation; one-hot encoding of nominal variables.</li>
+    <li><strong>Models compared:</strong> Logistic Regression, K-Nearest Neighbours, Support Vector Machine, Decision Tree, Random Forest, Gradient Boosting and an Artificial Neural Network (Multilayer Perceptron).</li>
+    <li><strong>Validation:</strong> stratified 80/20 split, 5-fold cross-validated grid search, model selection on CV ROC-AUC only, decision threshold tuned on out-of-fold predictions (Youden's J).</li>
+    <li><strong>Explainability:</strong> global permutation importance and per-patient "what drove this result" analysis.</li>
+  </ul>
+
+  <h2>Datasets</h2>
+  <div class="card table-wrap">
+  <table class="table">
+    <thead><tr><th>Disease</th><th>Source</th><th class="num">Records</th><th class="num">Features</th></tr></thead>
+    <tbody>{% for k, m in metrics.items() %}<tr><td>{{ m.name }}</td><td>{{ m.dataset }}</td><td class="num">{{ m.n_records }}</td><td class="num">{{ m.n_features }}</td></tr>{% endfor %}</tbody>
+  </table>
+  </div>
+
+  <h2>API</h2>
+  <p>Other systems can request predictions in JSON:</p>
+  <pre><code>POST /api/predict/diabetes
+{"Pregnancies": 2, "Glucose": 148, "BloodPressure": 72, "BMI": 33.6,
+ "DiabetesPedigreeFunction": 0.627, "Age": 50}</code></pre>
+
+  <h2>Limitations</h2>
+  <ul>
+    <li>The datasets are small and come from specific populations (Pima women aged 21+, Cleveland Clinic, one Indian hospital); results may not generalise.</li>
+    <li>The CKD dataset is almost perfectly separable, so its near-perfect scores should be read with caution.</li>
+    <li>The tool is for education and screening support only — it is not a medical device and not a diagnosis.</li>
+  </ul>
+</section>
+{% endblock %}

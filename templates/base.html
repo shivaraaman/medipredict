@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}MediPredict{% endblock %} · AI Disease Risk Prediction</title>
+  <meta name="description" content="MediPredict estimates the risk of diabetes, heart disease and chronic kidney disease using machine learning and neural networks.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230e5c56'/><path d='M8 17h4l2-5 4 10 2-5h4' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+{% from '_macros.html' import icon %}
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="{{ url_for('index') }}">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M7 17h4.5l2.2-5.5 4.4 11 2.2-5.5H25" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      MediPredict
+    </a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle menu">
+    <label for="nav-toggle" class="nav-burger" aria-hidden="true"><span></span></label>
+    <nav class="nav-links" aria-label="Main">
+      {% for key, d in DISEASES.items() %}
+        <a href="{{ url_for('assess', disease=key) }}" {% if request.view_args and request.view_args.get('disease') == key %}aria-current="page"{% endif %}>{{ d.name }}</a>
+      {% endfor %}
+      <a href="{{ url_for('performance') }}" {% if request.endpoint == 'performance' %}aria-current="page"{% endif %}>Model performance</a>
+      <a href="{{ url_for('history') }}" {% if request.endpoint == 'history' %}aria-current="page"{% endif %}>History</a>
+      <a href="{{ url_for('about') }}" {% if request.endpoint == 'about' %}aria-current="page"{% endif %}>About</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<div class="wrap flashes">{% for cat, m in messages %}<div class="flash flash-{{ cat }}" role="status">{{ m }}</div>{% endfor %}</div>{% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <strong>MediPredict</strong> — Final Year Project in Healthcare Informatics.<br>
+      Machine learning &amp; neural-network models for early disease risk screening.
+    </div>
+    <p class="disclaimer">For educational and screening support only. MediPredict is not a medical device and does not provide a diagnosis. Always consult a qualified healthcare professional.</p>
+  </div>
+  <div class="wrap footer-base">© {{ year }} MediPredict project team</div>
+</footer>
+</body>
+</html>

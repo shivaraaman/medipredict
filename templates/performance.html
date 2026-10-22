@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Model performance{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1>Model performance</h1>
+  <p class="lede">Seven algorithms were tuned for each disease with 5-fold stratified cross-validation on 80% of the data.
+    The deployed model was chosen by cross-validated ROC-AUC, and every number below is measured on the remaining
+    <strong>20% held-out test set</strong> that no model saw during training or selection.</p>
+
+  <nav class="tabs" aria-label="Disease">
+    {% for key, m in metrics.items() %}<a href="#{{ key }}">{{ icon(DISEASES[key].icon, 18) }} {{ m.name }}</a>{% endfor %}
+  </nav>
+
+  {% for key, m in metrics.items() %}
+  {% set best = m.results[m.deployed_model] %}
+  <article id="{{ key }}" class="perf-block">
+    <h2>{{ icon(DISEASES[key].icon, 22) }} {{ m.name }}</h2>
+    <p class="muted">{{ m.dataset }} — {{ m.n_records }} patients ({{ m.n_positive }} positive, {{ m.n_negative }} negative), {{ m.n_features }} features,
+      {{ m.n_train }} train / {{ m.n_test }} test. Deployed model: <strong>{{ m.deployed_model }}</strong>.</p>
+
+    <div class="kpis">
+      {% for k, lab in [('accuracy','Accuracy'),('recall','Sensitivity'),('specificity','Specificity'),('precision','Precision'),('f1','F1-score'),('roc_auc','ROC-AUC')] %}
+      <div class="kpi"><span class="kpi-label">{{ lab }}</span><span class="kpi-value">{% if k == 'roc_auc' %}{{ '%.3f'|format(best[k]) }}{% else %}{{ best[k]|pct }}{% endif %}</span></div>
+      {% endfor %}
+    </div>
+
+    <div class="card table-wrap">
+      <table class="table">
+        <caption class="sr-only">Test-set metrics for every model, {{ m.name }}</caption>
+        <thead><tr><th>Model</th><th class="num">CV ROC-AUC</th><th class="num">Accuracy</th><th class="num">Precision</th><th class="num">Sensitivity</th><th class="num">Specificity</th><th class="num">F1</th><th class="num">ROC-AUC</th></tr></thead>
+        <tbody>
+        {% for name, r in m.results.items() %}
+          <tr {% if name == m.deployed_model %}class="hl"{% endif %}>
+            <th scope="row">{{ name }}{% if name == m.deployed_model %} <span class="badge badge-low">Deployed</span>{% endif %}</th>
+            <td class="num">{{ '%.3f'|format(r.cv_roc_auc_mean) }} <span class="muted small">± {{ '%.3f'|format(r.cv_roc_auc_std) }}</span></td>
+            <td class="num">{{ r.accuracy|pct }}</td><td class="num">{{ r.precision|pct }}</td><td class="num">{{ r.recall|pct }}</td>
+            <td class="num">{{ r.specificity|pct }}</td><td class="num">{{ '%.3f'|format(r.f1) }}</td><td class="num">{{ '%.3f'|format(r.roc_auc) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fig-grid">
+      <figure><img src="{{ url_for('figures', name=key ~ '_roc.png') }}" alt="ROC curves for all models, {{ m.name }}" loading="lazy"><figcaption>ROC curves on the test set</figcaption></figure>
+      <figure><img src="{{ url_for('figures', name=key ~ '_comparison.png') }}" alt="Accuracy, F1 and ROC-AUC by model, {{ m.name }}" loading="lazy"><figcaption>Model comparison</figcaption></figure>
+      <figure><img src="{{ url_for('figures', name=key ~ '_confusion.png') }}" alt="Confusion matrix of the deployed model, {{ m.name }}" loading="lazy"><figcaption>Confusion matrix — deployed model</figcaption></figure>
+      <figure><img src="{{ url_for('figures', name=key ~ '_importance.png') }}" alt="Permutation feature importance, {{ m.name }}" loading="lazy"><figcaption>Which inputs matter most</figcaption></figure>
+      <figure class="wide"><img src="{{ url_for('figures', name=key ~ '_ann_training.png') }}" alt="ANN loss and validation accuracy by epoch, {{ m.name }}" loading="lazy">
+        <figcaption>Neural network: {{ m.ann.layers|join(' → ') }} neurons, ReLU, Adam, L2 α = {{ m.ann.l2_alpha }}, {{ m.ann.trainable_parameters }} parameters, {{ m.ann.epochs_trained }} epochs (early stopping)</figcaption></figure>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

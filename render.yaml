@@ -1,0 +1,16 @@
+# Render Blueprint — deploy with: Render dashboard → New → Blueprint → select this repo
+services:
+  - type: web
+    name: medipredict
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /tmp/medipredict.db   # free plan: resets on redeploy. Paid plan: attach a disk and use /var/data/medipredict.db

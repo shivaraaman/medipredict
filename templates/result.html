@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}{{ spec.name }} result{% endblock %}
+{% block content %}
+{% set p = res.probability %}
+{% set maxd = (res.contributions|map(attribute='delta')|map('abs')|max) if res.contributions else 1 %}
+<section class="wrap section narrow">
+  <a class="back no-print" href="{{ url_for('assess', disease=disease) }}">← New {{ spec.name|lower }} assessment</a>
+  <div class="page-head">
+    <span class="card-icon">{{ icon(spec.icon, 26) }}</span>
+    <div>
+      <h1>{{ spec.name }} risk result</h1>
+      <p class="muted small">Assessment {{ row.id }}{% if row.patient_ref %} · Patient ref {{ row.patient_ref }}{% endif %} · {{ row.created_at.replace('T', ' ')[:16] }} UTC</p>
+    </div>
+  </div>
+
+  <div class="result-top card band-{{ res.band }}">
+    <div class="gauge" role="img" aria-label="Estimated risk {{ p|pct }}">
+      <svg viewBox="0 0 200 116" width="220">
+        <path d="M20 100 A80 80 0 0 1 180 100" class="gauge-track" />
+        <path d="M20 100 A80 80 0 0 1 180 100" class="gauge-fill" pathLength="100"
+              stroke-dasharray="{{ (p * 100)|round(1) }} 100" />
+        {% set ang = 3.14159 * (1 - res.threshold) %}
+        <line x1="{{ 100 + 68 * (ang|cos) }}" y1="{{ 100 - 68 * (ang|sin) }}" x2="{{ 100 + 92 * (ang|cos) }}" y2="{{ 100 - 92 * (ang|sin) }}" class="gauge-thr"/>
+        <text x="100" y="92" text-anchor="middle" class="gauge-value">{{ p|pct(0) }}</text>
+        <text x="100" y="112" text-anchor="middle" class="gauge-cap">estimated probability</text>
+      </svg>
+    </div>
+    <div class="result-text">
+      <span class="badge badge-{{ res.band }}">
+        {% if res.band == 'high' %}<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 15 14H1z" fill="currentColor"/><rect x="7.2" y="6" width="1.6" height="4" fill="#fff"/><rect x="7.2" y="11" width="1.6" height="1.6" fill="#fff"/></svg>
+        {% elif res.band == 'borderline' %}<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="currentColor"/><rect x="4" y="7.2" width="8" height="1.6" fill="#fff"/></svg>
+        {% else %}<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="m4.8 8.2 2.2 2.2 4.2-4.6" stroke="#fff" stroke-width="1.8" fill="none"/></svg>{% endif %}
+        {{ res.band_label }}
+      </span>
+      <h2 class="result-headline">
+        {% if res.positive %}The model classifies this profile as <strong>{{ spec.positive }}</strong>.
+        {% else %}The model classifies this profile as <strong>{{ spec.negative }}</strong>.{% endif %}
+      </h2>
+      <p class="muted">Decision threshold {{ res.threshold|pct(0) }} (tuned by cross-validation to balance sensitivity and specificity).
+        Model: {{ res.model_name }} — test accuracy {{ metrics.results[res.model_name].accuracy|pct }}, sensitivity {{ metrics.results[res.model_name].recall|pct }}.</p>
+      <p class="advice">
+        {% if res.band == 'high' %}Recommend a clinical review and confirmatory testing{% if disease == 'diabetes' %} (HbA1c or fasting plasma glucose){% elif disease == 'heart' %} (ECG, lipid profile, stress test or cardiology referral){% else %} (eGFR, urine albumin-to-creatinine ratio, nephrology referral){% endif %}.
+        {% elif res.band == 'borderline' %}The estimate is close to the decision threshold. Consider repeat measurements and lifestyle risk-factor review.
+        {% else %}No elevated risk detected from these values. Continue routine screening as advised by a clinician.{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>What drove this result</h3>
+      {% if res.contributions %}
+      <p class="muted small">Change in risk when each entered value is replaced with a typical patient's value.</p>
+      <ul class="contrib">
+        {% for c in res.contributions %}
+        <li>
+          <div class="contrib-label"><span>{{ c.label }}</span>
+            <span class="contrib-delta {{ 'up' if c.delta > 0 else 'down' }}">{{ '+' if c.delta > 0 }}{{ (c.delta * 100)|round(1) }} pts {{ '▲ raises' if c.delta > 0 else '▼ lowers' }}</span></div>
+          <div class="contrib-bar"><span class="{{ 'up' if c.delta > 0 else 'down' }}" style="width: {{ (c.delta|abs / maxd * 100)|round(1) }}%"></span></div>
+          <div class="muted small">Entered {{ c.value|fmt }} · typical {{ c.typical|fmt }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted">No single measurement moved the estimate noticeably.</p>{% endif %}
+    </div>
+    <div class="card">
+      <h3>Values entered</h3>
+      <table class="table compact">
+        <tbody>
+        {% for f in spec.features %}
+          <tr {% if values.get(f.key) is none %}class="dim"{% endif %}><th scope="row">{{ f.label }}</th><td>{{ display_value(f, values.get(f.key)) }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if res.missing %}<p class="muted small">{{ res.missing|length }} value(s) not provided were filled from the training-set median.</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="form-actions no-print">
+    <button class="btn btn-ghost" onclick="window.print()">Print / save as PDF</button>
+    <a class="btn btn-primary" href="{{ url_for('assess', disease=disease) }}">New assessment</a>
+    <a class="link" href="{{ url_for('history') }}">View history</a>
+  </div>
+  <p class="disclaimer">This is a statistical estimate for screening support, not a diagnosis.</p>
+</section>
+{% endblock %}

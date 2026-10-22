@@ -1,0 +1,4 @@
+# Training, figures and tests
+-r requirements.txt
+matplotlib==3.11.2
+pytest>=8

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Healthcare informatics · Machine learning · Neural networks</p>
+      <h1>Early risk screening for three chronic diseases, in under a minute.</h1>
+      <p class="lede">MediPredict uses models trained on clinical datasets to estimate a patient's risk of
+        <strong>diabetes</strong>, <strong>heart disease</strong> and <strong>chronic kidney disease</strong>,
+        and explains which measurements drove the result.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#start">Start an assessment</a>
+        <a class="btn btn-ghost" href="{{ url_for('performance') }}">See how accurate it is</a>
+      </div>
+    </div>
+    <div class="hero-stats" aria-label="Headline model results">
+      {% for key, s in summary.items() %}
+      <div class="stat">
+        <span class="stat-icon">{{ icon(DISEASES[key].icon, 20) }}</span>
+        <span class="stat-label">{{ DISEASES[key].name }}</span>
+        <span class="stat-value">{{ s.accuracy|pct }}</span>
+        <span class="stat-sub">test accuracy · ROC-AUC {{ '%.3f'|format(s.roc_auc) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="start" class="wrap section">
+  <h2>Choose an assessment</h2>
+  <div class="cards">
+    {% for key, d in DISEASES.items() %}
+    {% set m = metrics[key] %}
+    <article class="card disease-card">
+      <div class="card-icon">{{ icon(d.icon, 26) }}</div>
+      <h3>{{ d.name }}</h3>
+      <p class="muted">{{ m.n_features }} clinical inputs · trained on {{ m.n_records }} patient records</p>
+      <p class="muted small">Model: {{ m.deployed_model }}</p>
+      <div class="card-actions">
+        <a class="btn btn-primary" href="{{ url_for('assess', disease=key) }}">Assess risk</a>
+        <a class="link" href="{{ url_for('assess', disease=key, sample=1) }}">Try with sample values</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="wrap section how">
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><span class="step-n">1</span><div><h3>Enter measurements</h3><p>Vital signs and lab values from a routine check-up. Optional fields can be left blank — the model imputes them from typical values.</p></div></li>
+    <li><span class="step-n">2</span><div><h3>Model estimates risk</h3><p>A tuned neural network or classical model, selected by 5-fold cross-validation among seven algorithms, outputs a probability.</p></div></li>
+    <li><span class="step-n">3</span><div><h3>Understand the result</h3><p>See the risk band, the measurements that raised or lowered it, and save it to the assessment history.</p></div></li>
+  </ol>
+</section>
+{% endblock %}
